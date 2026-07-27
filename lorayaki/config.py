@@ -58,6 +58,16 @@ GLOBAL_DEFAULTS: dict[str, Any] = {
         "character_tag_expand": True,
         "undesired_tags": [],
     },
+    # JoyCaption (natural-language captioner). Runs in its OWN venv via
+    # subprocess — torch/transformers never enter the lorayaki venv.
+    "joycaption": {
+        "dir": None,            # path to a joycaption checkout (own venv built)
+        "python": None,         # explicit interpreter; null -> auto-detect in dir
+        "model": "fancyfeast/llama-joycaption-beta-one-hf-llava",
+        "batch_size": 1,
+        "max_new_tokens": 256,
+        "prompt": "Write a long descriptive caption for this image.",
+    },
 }
 
 CHARACTER_DEFAULTS: dict[str, Any] = {
@@ -114,6 +124,11 @@ CHARACTER_DEFAULTS: dict[str, Any] = {
         # WD14 thresholds come from the global config; this only toggles it.
         "wd14": {
             "enabled": True,
+        },
+        # JoyCaption natural-language description, appended after the tags.
+        # null -> auto: enabled for the Anima backend, disabled otherwise.
+        "joycaption": {
+            "enabled": None,
         },
         # Tag categories dropped before merging (new characters get wrong
         # existing-character/copyright/artist tags): 1=artist 3=copyright 4=character.
@@ -273,6 +288,18 @@ class GlobalConfig:
     def wd14(self) -> dict[str, Any]:
         return self.data.get("wd14", {})
 
+    @property
+    def joycaption(self) -> dict[str, Any]:
+        return self.data.get("joycaption", {})
+
+    @property
+    def joycaption_dir(self) -> Path | None:
+        return paths.resolve_path(self.data.get("joycaption", {}).get("dir"))
+
+    @property
+    def joycaption_python(self) -> str | None:
+        return self.data.get("joycaption", {}).get("python")
+
     def validate(self) -> list[str]:
         errors: list[str] = []
         if not self.data.get("sd_scripts_dir"):
@@ -371,6 +398,15 @@ class CharacterConfig:
 
     def resolve_preset(self, global_config: GlobalConfig) -> str:
         return self.training.get("preset") or global_config.default_preset
+
+    def joycaption_enabled(self, global_config: GlobalConfig) -> bool:
+        """Whether JoyCaption natural-language captioning runs for this
+        character. An explicit ``tagging.joycaption.enabled`` wins; when it is
+        null the feature auto-enables only for the Anima backend."""
+        enabled = self.tagging.get("joycaption", {}).get("enabled")
+        if enabled is not None:
+            return bool(enabled)
+        return self.resolve_backend(global_config) == "anima"
 
     def validate(self, global_config: GlobalConfig | None = None) -> list[str]:
         errors: list[str] = []

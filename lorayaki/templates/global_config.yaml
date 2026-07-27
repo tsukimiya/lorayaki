@@ -42,3 +42,15 @@ wd14:
   remove_underscore: true
   character_tag_expand: true
   undesired_tags: []
+
+# JoyCaption (自然言語キャプション生成 / Anima バックエンド向け)
+# 専用 venv (torch + transformers 入り) が必要です。lorayaki 本体の venv には入れません。
+# 有効/無効はキャラ側 (character.yaml の tagging.joycaption.enabled) で制御。
+# 既定では backend: anima のキャラでのみ自動有効になります。
+joycaption:
+  dir: null                     # 例: /home/user/joycaption (venv 構築済み)
+  python: null                  # null なら dir 内の venv python を自動検索
+  model: fancyfeast/llama-joycaption-beta-one-hf-llava
+  batch_size: 1
+  max_new_tokens: 256
+  prompt: "Write a long descriptive caption for this image."

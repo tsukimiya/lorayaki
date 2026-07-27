@@ -130,3 +130,29 @@ class TestCharacterConfig:
         assert again.training["epochs"] == 25
         # user's original value preserved
         assert again.trigger == "cyk girl"
+
+
+class TestJoycaptionEnabled:
+    def test_explicit_true(self, project: Path, sample_char: str):
+        cfg = CharacterConfig.load(sample_char)
+        cfg.data["tagging"]["joycaption"] = {"enabled": True}
+        gcfg = GlobalConfig.load()
+        assert cfg.joycaption_enabled(gcfg) is True
+
+    def test_explicit_false_overrides_anima(self, project: Path, sample_char: str):
+        cfg = CharacterConfig.load(sample_char)
+        cfg.data["backend"] = "anima"
+        cfg.data["tagging"]["joycaption"] = {"enabled": False}
+        gcfg = GlobalConfig.load()
+        assert cfg.joycaption_enabled(gcfg) is False
+
+    def test_null_auto_enables_for_anima(self, project: Path, sample_char: str):
+        cfg = CharacterConfig.load(sample_char)
+        cfg.data["backend"] = "anima"
+        gcfg = GlobalConfig.load()
+        assert cfg.joycaption_enabled(gcfg) is True
+
+    def test_null_disabled_for_illustrious(self, project: Path, sample_char: str):
+        cfg = CharacterConfig.load(sample_char)  # backend null -> illustrious default
+        gcfg = GlobalConfig.load()
+        assert cfg.joycaption_enabled(gcfg) is False

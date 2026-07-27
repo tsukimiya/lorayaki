@@ -193,6 +193,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--force", action="store_true", help="既存キャプションも再タグ付け")
     p.add_argument("--oppai-only", action="store_true", help="OppaiOracle のみ実行")
     p.add_argument("--wd14-only", action="store_true", help="WD14 のみ実行")
+    p.add_argument("--joycaption-only", action="store_true", help="JoyCaption のみ実行")
     p.set_defaults(func=cmd_tag)
 
     p = sub.add_parser("prep", help="データセットと設定ファイルを組み立て")

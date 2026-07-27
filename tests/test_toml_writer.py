@@ -61,3 +61,23 @@ def test_write_and_roundtrip(project: Path, sample_char: str, tmp_path: Path):
     parsed = tomllib.loads(out.read_text(encoding="utf-8"))
     assert parsed["datasets"][0]["subsets"][0]["num_repeats"] == 7
     assert parsed["general"]["keep_tokens"] == 1
+
+
+def test_shuffle_caption_default_true(project: Path, sample_char: str):
+    ccfg = CharacterConfig.load(sample_char)
+    toml = build_dataset_config(
+        dataset_dir=Path("/x"), config=ccfg, preset=PRESETS["16gb"], num_repeats=5
+    )
+    assert toml["general"]["shuffle_caption"] is True
+
+
+def test_shuffle_caption_disabled(project: Path, sample_char: str):
+    ccfg = CharacterConfig.load(sample_char)
+    toml = build_dataset_config(
+        dataset_dir=Path("/x"),
+        config=ccfg,
+        preset=PRESETS["16gb"],
+        num_repeats=5,
+        shuffle_caption=False,
+    )
+    assert toml["general"]["shuffle_caption"] is False

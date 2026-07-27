@@ -21,11 +21,15 @@ def build_dataset_config(
     config: CharacterConfig,
     preset: PresetConfig,
     num_repeats: int,
+    shuffle_caption: bool = True,
 ) -> dict:
     tagging = config.tagging
     return {
         "general": {
-            "shuffle_caption": True,
+            # Disabled when captions carry a natural-language description
+            # (JoyCaption / Anima): sd-scripts splits captions on commas and
+            # would shuffle the sentence apart.
+            "shuffle_caption": shuffle_caption,
             "caption_extension": tagging.get("caption_extension", ".txt"),
             # keep the trigger (+ always_first_tags) pinned while shuffling
             "keep_tokens": config.keep_tokens,

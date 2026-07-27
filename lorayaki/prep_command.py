@@ -60,7 +60,13 @@ def run_prep(args: argparse.Namespace) -> int:
     toml_path = gcfg.characters_dir / args.name / "work" / "dataset.toml"
     write_dataset_toml(
         toml_path,
-        build_dataset_config(dataset_dir=dataset_dir, config=ccfg, preset=preset, num_repeats=int(repeats)),
+        build_dataset_config(
+            dataset_dir=dataset_dir,
+            config=ccfg,
+            preset=preset,
+            num_repeats=int(repeats),
+            shuffle_caption=not ccfg.joycaption_enabled(gcfg),
+        ),
     )
 
     prompts_path = gcfg.characters_dir / args.name / "work" / "sample_prompts.txt"

@@ -74,6 +74,9 @@ wd14:
   repo_id: SmilingWolf/wd-v1-4-convnext-tagger-v2
   general_threshold: 0.35
   character_threshold: 0.85
+joycaption:                                  # 任意。Anima 向け自然言語キャプション
+  dir: /home/user/joycaption                 # 専用 venv 込みのチェックアウト
+  model: fancyfeast/llama-joycaption-beta-one-hf-llava
 ```
 
 ### characters/<char>/character.yaml(キャラ設定)
@@ -119,6 +122,29 @@ samples:
 network_train_unet_only / xformers / AdamW8bit / cosine_with_restarts(num_cycles=3) / unet_lr 1e-4 /
 noise_offset 0.03`(既定の `training.extra_args`)。
 `training.extra_args` で任意の sd-scripts フラグを追加・上書きできます(例: `sdpa: true`)。
+
+### JoyCaption(自然言語キャプション / Anima 向け)
+
+Anima(Qwen-Image 系)は Booru タグより**自然言語キャプション**でよく学習します。
+[JoyCaption](https://github.com/fpgaminer/joycaption) を**任意で**使えます。
+
+- **本体 venv には入れません**(torch/transformers は CUDA 競合のため)。JoyCaption 専用の
+  venv を別途用意し、`configs/lorayaki.yaml` の `joycaption.dir` で指します:
+
+  ```bash
+  git clone https://github.com/fpgaminer/joycaption.git && cd joycaption
+  python3 -m venv venv && source venv/bin/activate
+  pip install torch torchvision transformers pillow   # 環境に合わせる
+  ```
+
+- **自動有効化**: `backend: anima` のキャラで自動的に JoyCaption が走ります
+  (Illustrious では無効)。明示制御は `character.yaml` の `tagging.joycaption.enabled: true/false`。
+- **キャプション形式**: タグを先に、自然言語の説明を後に追記します —
+  `trigger, <booru タグ群>, <自然言語の説明>`。
+- **shuffle_caption 自動無効化**: 自然言語キャプションを使うキャラは、データセット TOML の
+  `shuffle_caption` が自動的に `false` になります(sd-scripts がカンマで文を分断・シャッフル
+  するのを防ぐため)。Illustrious(タグのみ)は従来どおり `true` です。
+- 動作確認は `lorayaki doctor`(JoyCaption 行)、タグ付けは `lorayaki tag <char> --joycaption-only`。
 
 ### チューニングの目安
 

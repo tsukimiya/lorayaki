@@ -25,13 +25,19 @@ SD_SCRIPT_VENV_CANDIDATES = (
 )
 
 
-def find_sd_scripts_python(sd_scripts_dir: Path) -> Path | None:
-    """Locate the python interpreter of the sd-scripts venv."""
+def find_venv_python(directory: Path) -> Path | None:
+    """Locate a python interpreter inside *directory*'s venv (common layout:
+    venv/bin/python, .venv/bin/python, venv/Scripts/python.exe)."""
     for rel in SD_SCRIPT_VENV_CANDIDATES:
-        candidate = sd_scripts_dir / rel
+        candidate = directory / rel
         if candidate.exists():
             return candidate
     return None
+
+
+def find_sd_scripts_python(sd_scripts_dir: Path) -> Path | None:
+    """Locate the python interpreter of the sd-scripts venv."""
+    return find_venv_python(sd_scripts_dir)
 
 
 def _check(label: str, ok: bool | None, detail: str = "") -> bool:
@@ -160,6 +166,25 @@ def run_doctor(config: GlobalConfig | None = None) -> int:
         True if accel else None,
         "PATH 上にあります" if accel else "PATH 上にありません (sd-scripts の venv 内なら問題ありません)",
     )
+
+    # 8. JoyCaption (optional; only needed for the Anima backend) -------------
+    jc_dir = config.joycaption_dir
+    if jc_dir:
+        jc_py = (
+            Path(config.joycaption_python).expanduser()
+            if config.joycaption_python
+            else find_venv_python(jc_dir)
+        )
+        if jc_dir.is_dir() and jc_py and jc_py.exists():
+            _check("JoyCaption", True, f"{jc_dir} (python: {jc_py})")
+        elif jc_dir.is_dir():
+            _check(
+                "JoyCaption",
+                None,
+                f"venv が見つかりません: {jc_dir} (joycaption.python を設定してください)",
+            )
+        else:
+            _check("JoyCaption", None, f"ディレクトリが存在しません: {jc_dir}")
 
     log.info("診断完了: %s", "問題なし" if failures == 0 else f"{failures} 件のエラー")
     return 0 if failures == 0 else 1

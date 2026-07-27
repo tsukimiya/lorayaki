@@ -63,8 +63,20 @@ def merge_tags(
     return out
 
 
-def tags_to_caption(tags: Iterable[str], *, separator: str = DEFAULT_SEPARATOR) -> str:
-    return separator.join(tags)
+def tags_to_caption(
+    tags: Iterable[str],
+    *,
+    separator: str = DEFAULT_SEPARATOR,
+    description: str | None = None,
+) -> str:
+    """Join *tags* with *separator*, then append a verbatim natural-language
+    *description* (e.g. JoyCaption output) after the tags. The description is
+    kept as-is — its internal commas are preserved and it is never treated as
+    a tag (never counted, never split on re-read)."""
+    caption = separator.join(tags)
+    if description:
+        caption = f"{caption}{separator}{description}" if caption else description
+    return caption
 
 
 def caption_to_tags(caption: str, *, separator: str = DEFAULT_SEPARATOR) -> list[str]:

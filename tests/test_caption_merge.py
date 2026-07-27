@@ -61,3 +61,26 @@ class TestCaptionRoundtrip:
 
     def test_strips_empty_segments(self):
         assert caption_to_tags("a, , b ,, c") == ["a", "b", "c"]
+
+
+class TestTagsToCaptionDescription:
+    def test_no_description_unchanged(self):
+        assert tags_to_caption(["a", "b"]) == "a, b"
+
+    def test_description_appended_verbatim(self):
+        tags = ["cyk girl", "1girl", "long hair"]
+        desc = "A young woman with long flowing hair stands in a garden."
+        result = tags_to_caption(tags, description=desc)
+        assert result == (
+            "cyk girl, 1girl, long hair, "
+            "A young woman with long flowing hair stands in a garden."
+        )
+
+    def test_description_internal_commas_preserved(self):
+        result = tags_to_caption(
+            ["trigger"], description="She has blue eyes, long hair, and a smile."
+        )
+        assert result == "trigger, She has blue eyes, long hair, and a smile."
+
+    def test_empty_tags_with_description(self):
+        assert tags_to_caption([], description="Just a description.") == "Just a description."

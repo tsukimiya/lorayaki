@@ -1,8 +1,10 @@
-"""`lorayaki tag`: run OppaiOracle + WD14, merge, write captions.
+"""`lorayaki tag`: run OppaiOracle + WD14 (+ optional JoyCaption), merge, write.
 
 Captions are written next to each image as <image>.txt so the user can review
 and hand-edit them before `prep` assembles the dataset. Re-running without
---force skips images that already have a caption.
+--force skips images that already have a caption. When JoyCaption is enabled
+(auto for the Anima backend) a natural-language description is appended after
+the booru tags: ``trigger, <tags>, <description>``.
 """
 
 from __future__ import annotations
@@ -82,6 +84,13 @@ def _run_wd14(images_dir: Path, gcfg: GlobalConfig, caption_extension: str) -> N
     run_wd14_tagging(images_dir, gcfg, caption_extension=caption_extension)
 
 
+def _run_joycaption(todo: list[Path], gcfg: GlobalConfig) -> dict[Path, str]:
+    """JoyCaption natural-language descriptions over *todo* (in-memory)."""
+    from lorayaki.taggers.joycaption import run_joycaption_tagging
+
+    return run_joycaption_tagging(todo, gcfg)
+
+
 def run_tag(args: argparse.Namespace) -> int:
     log = get_logger()
     gcfg = GlobalConfig.load(args.config)
@@ -114,8 +123,22 @@ def run_tag(args: argparse.Namespace) -> int:
         return 0
 
     tagging = ccfg.tagging
-    oppai_enabled = tagging.get("oppai_oracle", {}).get("enabled", True) and not getattr(args, "wd14_only", False)
-    wd14_enabled = tagging.get("wd14", {}).get("enabled", True) and not getattr(args, "oppai_only", False)
+    oppai_only = getattr(args, "oppai_only", False)
+    wd14_only = getattr(args, "wd14_only", False)
+    joycaption_only = getattr(args, "joycaption_only", False)
+    oppai_enabled = (
+        tagging.get("oppai_oracle", {}).get("enabled", True)
+        and not wd14_only
+        and not joycaption_only
+    )
+    wd14_enabled = (
+        tagging.get("wd14", {}).get("enabled", True)
+        and not oppai_only
+        and not joycaption_only
+    )
+    joycaption_enabled = joycaption_only or (
+        ccfg.joycaption_enabled(gcfg) and not oppai_only and not wd14_only
+    )
 
     # 1. OppaiOracle (in-memory results)
     oppai_tags: dict[Path, list[str]] = {}
@@ -134,9 +157,19 @@ def run_tag(args: argparse.Namespace) -> int:
             log.error("WD14 タグ付けに失敗: %s", e)
             return 1
 
-    # 3. Merge and write final captions for the todo set
+    # 3. JoyCaption (subprocess; in-memory descriptions, like OppaiOracle)
+    descriptions: dict[Path, str] = {}
+    if joycaption_enabled:
+        try:
+            descriptions = _run_joycaption(todo, gcfg)
+        except Exception as e:  # noqa: BLE001
+            log.error("JoyCaption タグ付けに失敗: %s", e)
+            return 1
+
+    # 4. Merge and write final captions for the todo set
     extra_remove = set(tagging.get("extra_remove_tags", []))
     counter: Counter[str] = Counter()
+    total_tags = 0
     for img in todo:
         wd14_tags = None
         cap_file = paths.caption_path_for(img, ext)
@@ -149,12 +182,16 @@ def run_tag(args: argparse.Namespace) -> int:
             always_first_tags=ccfg.always_first_tags,
             extra_remove_tags=extra_remove,
         )
-        cap_file.write_text(tags_to_caption(merged), encoding="utf-8")
+        cap_file.write_text(
+            tags_to_caption(merged, description=descriptions.get(img)),
+            encoding="utf-8",
+        )
         counter.update(merged)
+        total_tags += len(merged)
 
-    avg = sum(len(caption_to_tags(p.read_text(encoding="utf-8"))) for p in
-              (paths.caption_path_for(i, ext) for i in todo)) / len(todo)
-    log.info("キャプション生成完了: %d 枚 (平均 %.1f タグ)", len(todo), avg)
+    log.info("キャプション生成完了: %d 枚 (平均 %.1f タグ)", len(todo), total_tags / len(todo))
+    if descriptions:
+        log.info("JoyCaption 自然言語キャプション: %d 枚", len(descriptions))
     top = ", ".join(f"{t}({n})" for t, n in counter.most_common(10))
     log.info("頻出タグ: %s", top)
     return 0
