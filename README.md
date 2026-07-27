@@ -78,23 +78,34 @@ wd14:
 
 ### characters/<char>/character.yaml(キャラ設定)
 
+`lorayaki new` の雛形は主要項目のみ。未設定の項目は `CHARACTER_DEFAULTS` と
+VRAM プリセットから補完されます。推奨値と根拠は以下の通り:
+
 ```yaml
 name: hitori
-trigger: htri girl          # 必須。生成時にこの語でキャラを召喚する
+trigger: htri girl               # 必須。生成時にこの語でキャラを召喚する
 base_model: illustrious-xl-0.1   # 必須。グローバルの models キー
-network:                    # null の項目はプリセット値が使われる
-  dim: null
-  alpha: null
-  conv_dim: null            # conv 系を設定すると LoCon になる(既定で有効)
+network:                         # null の項目はプリセット値が使われる
+  dim: null                      # キャラなら preset の 32 で十分。複雑/複数キャラは 64
+  alpha: null                    # dim/2(=16)が既定 → 実効LRを半減し安定
+  conv_dim: null                 # conv 系を設定すると LoCon になる(既定で有効)
   conv_alpha: null
 training:
   epochs: 10
-  num_repeats: null         # null なら ~2000 steps になるよう自動計算
-  preset: null              # null ならグローバル既定
+  num_repeats: null              # null なら ~2000 steps になるよう自動計算
+  preset: null                   # null ならグローバル既定(12gb/16gb/24gb)
+  unet_lr: 1e-4                  # 安定重視。似が弱い(学習不足)なら 2e-4 へ
+  # extra_args:                  # 既定で noise_offset: 0.03 が入る(Illustrious ネイティブ値)
+  #   noise_offset: null         #   無効化したい場合は null を指定
 samples:
   prompts:
-    - { prompt: "1girl, solo, looking at viewer, smile", width: 832, height: 1216, seed: 42 }
+    - { prompt: "htri girl, 1girl, solo, looking at viewer, smile", width: 832, height: 1216, seed: 42 }
 ```
+
+**学習率の目安**: LoRA の実効学習率は `unet_lr × (alpha/dim)` です。既定の
+`alpha=16/dim=32` では `1e-4 × 0.5 = 実効 5e-5`(過学習しにくい安定側)。
+より強く学習させたい場合は `alpha: 32`(=dim, 無スケール)+ `unet_lr: 1e-4`、
+または `alpha: 16` + `unet_lr: 2e-4` が Illustrious 系の目安です。
 
 ### VRAM プリセット(Illustrious LoCon 既定)
 
@@ -105,8 +116,9 @@ samples:
 | 24gb | 32/16 | 16/8 | 4 | 2048 | RTX 3090/4090 |
 
 固定で付くフラグ: `bf16 / gradient_checkpointing / cache_latents / cache_text_encoder_outputs /
-network_train_unet_only / xformers / AdamW8bit / cosine_with_restarts(num_cycles=3) / unet_lr 1e-4`。
-`training.extra_args` で任意の sd-scripts フラグを追加できます(例: `sdpa: true`)。
+network_train_unet_only / xformers / AdamW8bit / cosine_with_restarts(num_cycles=3) / unet_lr 1e-4 /
+noise_offset 0.03`(既定の `training.extra_args`)。
+`training.extra_args` で任意の sd-scripts フラグを追加・上書きできます(例: `sdpa: true`)。
 
 ### チューニングの目安
 

@@ -96,7 +96,9 @@ CHARACTER_DEFAULTS: dict[str, Any] = {
         "sample_every_n_epochs": 1,
         "seed": None,
         # Backend-specific pass-through, rendered as --key value flags.
-        "extra_args": {},
+        # noise_offset 0.03 ≈ Illustrious のネイティブ値。明暗の安定に効く。
+        # 無効化したい場合は character.yaml で noise_offset: null を指定。
+        "extra_args": {"noise_offset": 0.03},
     },
     "tagging": {
         "caption_extension": ".txt",

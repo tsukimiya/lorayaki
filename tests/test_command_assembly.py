@@ -49,6 +49,7 @@ def _expected_command(model: Path, toml: Path, prompts: Path, outdir: Path) -> l
         "--sample_every_n_epochs", "1",
         "--sample_prompts", str(prompts),
         "--sample_sampler", "euler_a",
+        "--noise_offset", "0.03",  # default training.extra_args
     ]
 
 
