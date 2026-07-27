@@ -1,0 +1,1 @@
+{"name": "tall", "input_size": [100, 300], "image_size": 448, "pad_color": [114, 114, 114], "mean": [0.5, 0.5, 0.5], "std": [0.5, 0.5, 0.5], "x0": 149, "y0": 0, "nw": 149, "nh": 448, "pixel_values_shape": [3, 448, 448], "padding_mask_shape": [448, 448], "_note": "arrays stripped to keep the repo small; geometry fields kept for parity checks"}

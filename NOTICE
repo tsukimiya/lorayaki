@@ -1,0 +1,15 @@
+lorayaki
+Copyright 2026 tsukimiya
+
+This product includes software derived from the EagleOppaiTagger project
+(Copyright 2026 tsukimiya), licensed under the Apache License, Version 2.0:
+
+  - lorayaki/taggers/oppai_oracle.py
+      ported from: server/preprocess.py, server/model_loader.py,
+                   scripts/python-ref/app.py (letterbox / preprocess)
+
+The OppaiOracle model weights are distributed separately from
+https://huggingface.co/Grio43/OppaiOracle (see that repository for its
+license terms).
+
+The Apache License, Version 2.0 text is included in LICENSE-APACHE.

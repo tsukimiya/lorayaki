@@ -1,0 +1,44 @@
+# lorayaki グローバル設定
+# 相対パスはコマンド実行ディレクトリ(lorayaki ルート)基準で解決されます。
+# sd_scripts_dir とモデルファイルは絶対パス推奨です。
+
+# [必須] kohya sd-scripts チェックアウト (venv 構築済みであること)
+sd_scripts_dir: null            # 例: /home/user/sd-scripts
+
+# [任意] sd-scripts の venv の python。null の場合 venv/bin/python を自動検索。
+sd_scripts_python: null
+
+# キャラ配置ディレクトリ
+characters_dir: characters
+
+# ベースモデルの登録: 論理キー -> パス。character.yaml の base_model から参照。
+models: {}
+# 例:
+# models:
+#   illustrious-xl-0.1: /data/models/Illustrious-XL-0.1.safetensors
+#   noobai-illustrious: /data/models/NoobAI-Illustrious-VPred-1.0.safetensors
+#   anima-dit: /data/models/anima/anima-v0.9.safetensors
+#   anima-qwen3: /data/models/anima/Qwen3-0.6B
+#   anima-vae: /data/models/anima/qwen-image-vae.safetensors
+
+defaults:
+  backend: illustrious          # illustrious | anima
+  preset: 16gb                  # 12gb | 16gb | 24gb (VRAM 別 LoCon 既定)
+
+# OppaiOracle タガ (../EagleOppaiTagger 由来の ONNX モデル)
+oppai_oracle:
+  mode: local                   # local: 内蔵 onnxruntime 推論 | http: 既存サーバ呼び出し
+  model_dir: models/OppaiOracle/V1.1_onnx
+  http_url: http://localhost:8765
+  provider: null                # null = 自動 (CUDA/DirectML/CPU)
+
+# WD14 タガ (sd-scripts 同梱スクリプトを subprocess 実行)
+wd14:
+  repo_id: SmilingWolf/wd-v1-4-convnext-tagger-v2
+  onnx: true
+  batch_size: 4
+  general_threshold: 0.35
+  character_threshold: 0.85
+  remove_underscore: true
+  character_tag_expand: true
+  undesired_tags: []

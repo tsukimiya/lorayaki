@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+
+# local models (downloaded on demand)
+models/
+
+# per-character working dirs (datasets, checkpoints, samples)
+characters/*/work/
