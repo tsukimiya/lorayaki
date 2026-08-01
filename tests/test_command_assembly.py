@@ -5,6 +5,7 @@ unet-only mode."""
 from __future__ import annotations
 
 import shlex
+import tomli
 from pathlib import Path
 
 from lorayaki.backends import get_backend
@@ -28,7 +29,7 @@ def _expected_command(model: Path, toml: Path, prompts: Path, outdir: Path) -> l
         "--unet_lr", "0.0001",
         "--optimizer_type", "AdamW8bit",
         "--lr_scheduler", "cosine_with_restarts",
-        "--lr_scheduler_args", "num_cycles=3",
+        "--lr_scheduler_num_cycles", "3",
         "--max_train_epochs", "10",
         "--save_every_n_epochs", "1",
         "--mixed_precision", "bf16",
@@ -110,6 +111,10 @@ def test_extra_args_passthrough_and_resume(project: Path, sample_char: str):
 def test_dry_run_end_to_end(project: Path, sample_char: str, capsys):
     # prep artifacts first (prep only needs config + images)
     assert main(["prep", "testchar"]) == 0
+    dataset_config = tomli.loads(
+        (project / "characters/testchar/work/dataset.toml").read_text(encoding="utf-8")
+    )
+    assert dataset_config["general"]["shuffle_caption"] is False
     rc = main(["train", "testchar", "--dry-run"])
     assert rc == 0
     printed = capsys.readouterr().out.strip()

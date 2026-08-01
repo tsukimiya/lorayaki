@@ -15,6 +15,7 @@ from pathlib import Path
 from lorayaki.backends import get_backend
 from lorayaki.backends.base import TrainPaths
 from lorayaki.config import CharacterConfig, GlobalConfig
+from lorayaki.doctor import find_sd_scripts_python
 from lorayaki.log import get_logger
 from lorayaki.model_registry import resolve_model
 
@@ -88,6 +89,13 @@ def run_training(args: argparse.Namespace) -> int:
 
     sd_dir = gcfg.sd_scripts_dir
     log.info("学習開始: %s (cwd=%s, preset=%s)", args.name, sd_dir, preset_name)
+    # Keep accelerate and the training script in the sd-scripts environment.
+    # Otherwise a globally installed accelerate may launch system Python.
+    sd_python = Path(gcfg.sd_scripts_python).expanduser() if gcfg.sd_scripts_python else find_sd_scripts_python(sd_dir)
+    if sd_python:
+        accelerate = sd_python.parent / "accelerate"
+        if accelerate.is_file():
+            cmd[0] = str(accelerate)
     log.info("cmd: %s", shlex.join(cmd))
     completed = subprocess.run(cmd, cwd=sd_dir)
     if completed.returncode != 0:

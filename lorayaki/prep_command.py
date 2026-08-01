@@ -58,6 +58,12 @@ def run_prep(args: argparse.Namespace) -> int:
     steps = n_images * repeats * epochs // preset.batch_size
 
     toml_path = gcfg.characters_dir / args.name / "work" / "dataset.toml"
+    # sd-scripts cannot shuffle captions while caching text encoder outputs.
+    # Prefer the cache for the default low-VRAM training preset.
+    shuffle_caption = not (
+        t.get("cache_text_encoder_outputs", False)
+        or ccfg.joycaption_enabled(gcfg)
+    )
     write_dataset_toml(
         toml_path,
         build_dataset_config(
@@ -65,7 +71,7 @@ def run_prep(args: argparse.Namespace) -> int:
             config=ccfg,
             preset=preset,
             num_repeats=int(repeats),
-            shuffle_caption=not ccfg.joycaption_enabled(gcfg),
+            shuffle_caption=shuffle_caption,
         ),
     )
 

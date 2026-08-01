@@ -86,6 +86,9 @@ class IllustriousBackend:
             "--lr_scheduler", str(t.get("scheduler", "cosine_with_restarts")),
         ]
         sched_args = t.get("scheduler_args") or {}
+        if "num_cycles" in sched_args:
+            cmd += ["--lr_scheduler_num_cycles", str(sched_args["num_cycles"])]
+            sched_args = {key: value for key, value in sched_args.items() if key != "num_cycles"}
         if sched_args:
             cmd += ["--lr_scheduler_args", *(f"{k}={v}" for k, v in sched_args.items())]
         cmd += [

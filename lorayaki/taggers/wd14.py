@@ -92,5 +92,5 @@ def run_wd14_tagging(image_dir: Path, gcfg: GlobalConfig, *, caption_extension: 
     except subprocess.CalledProcessError as e:
         raise RuntimeError(
             f"WD14 タグ付けが失敗しました (exit {e.returncode})。"
-            f"sd-scripts の venv に onnxruntime (--onnx 使用時) が入っているか確認してください。"
+            f"sd-scripts の venv に onnx と onnxruntime (--onnx 使用時) が入っているか確認してください。"
         ) from e
