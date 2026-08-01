@@ -15,7 +15,7 @@
 ## クイックスタート(GPU マシン)
 
 ```bash
-# 0. 前提: sd-scripts が venv 込みで動いていること(torch+CUDA, bitsandbytes, accelerate, xformers, onnxruntime)
+# 0. 前提: sd-scripts が venv 込みで動いていること(torch+CUDA, bitsandbytes, accelerate, xformers, onnx, onnxruntime)
 git clone <this repo> && cd lorayaki
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[onnx]"            # GPU 推論が良ければ ".[onnx-gpu]"
@@ -158,7 +158,7 @@ WD14(`--onnx`)とタグ付け全般のため、sd-scripts の venv には以下�
 
 ```bash
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124  # 環境に合わせる
-pip install bitsandbytes accelerate xformers onnxruntime huggingface_hub
+pip install bitsandbytes accelerate xformers onnx onnxruntime huggingface_hub
 accelerate config  # 初回のみ(単一 GPU の既定で OK)
 ```
 
