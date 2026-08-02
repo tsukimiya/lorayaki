@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import numpy as np
+
 from lorayaki.taggers.merge import caption_to_tags, merge_tags, tags_to_caption
+from lorayaki.taggers.oppai_oracle import probs_to_tags
 
 
 class TestMergeTags:
@@ -52,6 +55,16 @@ class TestMergeTags:
         a = merge_tags(["x", "y"], ["z"], trigger="t")
         b = merge_tags(["x", "y"], ["z"], trigger="t")
         assert a == b
+
+    def test_oppai_underscore_tags_dedup_against_wd14(self):
+        """End-to-end: OppaiOracle's danbooru-style tags are space-separated by
+        probs_to_tags, so they dedup against WD14's space-separated output."""
+        names = ["<PAD>", "polka_dot_bow", "solo"]
+        cats = [0, 0, 0]
+        probs = np.array([0.0, 0.99, 0.99], dtype=np.float32)
+        oppai = probs_to_tags(probs, names, cats)  # ["polka dot bow", "solo"]
+        merged = merge_tags(oppai, ["solo", "1girl"], trigger="t")
+        assert merged == ["t", "solo", "1girl", "polka dot bow"]
 
 
 class TestCaptionRoundtrip:

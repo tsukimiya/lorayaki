@@ -152,7 +152,10 @@ def probs_to_tags(
         # Sanitize: captions are comma-separated, so a tag that contains a
         # comma (e.g. "breasts, large" in the OppaiOracle vocabulary) would
         # corrupt the caption and sd-scripts' shuffle_caption tokenization.
-        name = " ".join(name.replace(",", " ").split())
+        # Underscores become spaces so tags match WD14's space-separated
+        # output (remove_underscore) and dedup against it during merge
+        # (e.g. "polka_dot_bow" -> "polka dot bow").
+        name = " ".join(name.replace(",", " ").replace("_", " ").split())
         if name in blacklist:
             continue
         picks.append((float(p), name))

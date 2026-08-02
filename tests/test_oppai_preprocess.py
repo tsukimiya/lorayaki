@@ -154,6 +154,14 @@ class TestProbsToTags:
         probs = np.array([0.0, 0.0, 0.99], dtype=np.float32)
         assert probs_to_tags(probs, names, cats) == ["breasts large"]
 
+    def test_underscore_converted_to_space(self):
+        # Danbooru-style underscores must become spaces so tags match WD14's
+        # space-separated output (remove_underscore) and dedup during merge.
+        names = ["<PAD>", "<UNK>", "polka_dot_bow"]
+        cats = [0, 0, 0]
+        probs = np.array([0.0, 0.0, 0.99], dtype=np.float32)
+        assert probs_to_tags(probs, names, cats) == ["polka dot bow"]
+
     def test_pad_unk_never_emitted(self):
         probs = np.ones(len(self.NAMES), dtype=np.float32)
         tags = probs_to_tags(probs, self.NAMES, self.CATS)
